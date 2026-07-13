@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+
+# YOLO and Deep Learning weights/caches
+*.pt
+*.onnx
+*.engine
+*.pb
+*.tflite
+*.h5
+runs/
+
+# Data
+data/
+!data/sample_turkey/
+!data/quakevision.yaml
+
+# OS generated files
+.DS_Store
+Thumbs.db
