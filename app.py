@@ -81,7 +81,7 @@ def draw_custom_masks(image, results):
 # YAN PANEL (SIDEBAR)
 st.sidebar.title("⚙️ Model Ayarları")
 
-default_model = os.path.join("runs", "segment", "quakevision", "weights", "best.pt")
+default_model = os.path.join("models", "best.pt")
 model_options = [default_model, "best_yolov8s.pt", "turkey_finetuned.pt"]
 
 selected_model_path = st.sidebar.selectbox("Model Seçimi", model_options)

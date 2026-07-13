@@ -18,6 +18,8 @@ ENV/
 *.tflite
 *.h5
 runs/
+!models/
+!models/*.pt
 
 # Data
 data/
