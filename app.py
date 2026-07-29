@@ -89,6 +89,12 @@ conf_threshold = st.sidebar.slider("Güven Eşiği (Confidence)", min_value=0.01
 iou_threshold = st.sidebar.slider("IoU Eşiği", min_value=0.10, max_value=0.90, value=0.45, step=0.05)
 
 st.sidebar.markdown("---")
+st.sidebar.subheader("📍 Harita (GIS) Ayarları")
+st.sidebar.info("Yüklediğiniz görüntünün gerçek konumunu haritada görmek için koordinatları buraya girebilirsiniz.")
+map_lat = st.sidebar.number_input("Enlem (Latitude)", value=37.5753, format="%.6f")
+map_lon = st.sidebar.number_input("Boylam (Longitude)", value=36.9228, format="%.6f")
+
+st.sidebar.markdown("---")
 st.sidebar.markdown("""
 ### Renk Kodları
 * 🟢 **Yeşil:** Sağlam
@@ -147,6 +153,7 @@ if image_to_process is not None:
                 conf=conf_threshold, 
                 iou=iou_threshold,
                 imgsz=1536, 
+                max_det=2000, # YOLOv8'in varsayılan 300 algılama limitini artırdık
                 device=0 if torch.cuda.is_available() else "cpu"
             )
             result_image = draw_custom_masks(image_to_process, results)
@@ -229,7 +236,36 @@ if image_to_process is not None:
             st.write("---")
             st.write("### 🗺️ CBS (GIS) Harita Görünümü")
             
-            map_center = [37.5753, 36.9228] # Kahramanmaraş varsayılan
+            map_center = [map_lat, map_lon]
+            
+            # Görüntüden otomatik EXIF GPS verisi okuma denemesi
+            try:
+                exif_info = image_to_process.getexif()
+                if exif_info:
+                    from PIL.ExifTags import TAGS, GPSTAGS
+                    for tag, value in exif_info.items():
+                        if TAGS.get(tag, tag) == "GPSInfo":
+                            gps_lat = value.get(2)
+                            gps_lat_ref = value.get(1)
+                            gps_lon = value.get(4)
+                            gps_lon_ref = value.get(3)
+                            
+                            if gps_lat and gps_lat_ref and gps_lon and gps_lon_ref:
+                                def to_deg(v):
+                                    # Handle different EXIF formats (tuples of floats or IFDRational)
+                                    return float(v[0]) + (float(v[1]) / 60.0) + (float(v[2]) / 3600.0)
+                                
+                                lat = to_deg(gps_lat)
+                                if gps_lat_ref != "N": lat = -lat
+                                lon = to_deg(gps_lon)
+                                if gps_lon_ref != "E": lon = -lon
+                                
+                                map_center = [lat, lon]
+                                st.success(f"📸 Görüntü içindeki GPS verisi otomatik bulundu: {lat:.6f}, {lon:.6f}. Harita bu konuma odaklanıyor.")
+                                break
+            except Exception:
+                pass
+                
             m = folium.Map(location=map_center, zoom_start=17, tiles="CartoDB dark_matter")
             
             img_w, img_h = image_to_process.size
